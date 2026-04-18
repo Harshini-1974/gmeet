@@ -14,7 +14,7 @@ pipeline {
                 echo "Force cleaning old containers and networks..."
 
                 sh '''
-                docker compose down -v --remove-orphans || true
+                docker-compose down -v || true
                 docker rm -f meeting_notes_backend meeting_notes_frontend || true
                 docker network prune -f || true
                 '''
@@ -24,14 +24,14 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 echo "Building Docker images..."
-                sh 'docker compose build'
+                sh 'docker-compose build'
             }
         }
 
         stage('Run Containers') {
             steps {
                 echo "Starting fresh containers..."
-                sh 'docker compose up -d'
+                sh 'docker-compose up -d'
             }
         }
 
@@ -40,7 +40,7 @@ pipeline {
                 echo "Waiting for backend to become healthy..."
 
                 sh '''
-                sleep 10
+                sleep 15
                 docker ps
                 '''
             }
@@ -52,7 +52,7 @@ pipeline {
 
                 sh '''
                 docker run --rm \
-                --network meeting-notes-pipeline_default \
+                --network gmeet_meetpulse-network \
                 curlimages/curl \
                 curl --retry 5 --retry-delay 5 http://meeting_notes_backend:8000/health
                 '''
@@ -65,7 +65,7 @@ pipeline {
             echo "Cleanup after build..."
 
             sh '''
-            docker compose down -v || true
+            docker-compose down -v || true
             '''
         }
 
